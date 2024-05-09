@@ -1,8 +1,3 @@
-// import { defaultWagmiConfig } from "@web3modal/wagmi/react/config";
-
-// import { cookieStorage, createStorage } from "wagmi";
-// import { localhost, mainnet, sepolia, foundry } from "wagmi/chains";
-
 import { defaultWagmiConfig } from "@web3modal/wagmi/react/config";
 
 import { cookieStorage, createStorage } from "wagmi";
