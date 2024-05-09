@@ -15,8 +15,10 @@ export default async function handler(
         return res.status(200).json({ error: "Invalid request" });
       } else {
         const orderInfo = order as RentoutOrderMsg;
+        console.log("orderInfo:", orderInfo);
         const ok = await verifyingOrder(chainId, orderInfo, signature);
         if (ok) {
+          console.log("verify ok");
           // 验证签名通过后，将订单存储到数据库
           await saveOrder(chainId, orderInfo, nft as NFTInfo, signature);
           return res.status(200).json({ success: true });
@@ -40,6 +42,14 @@ function verifyingOrder(
   order: any,
   signature: any
 ): Promise<boolean> {
-  // TODO: 验证订单签名
-  return false as any;
+  console.log("verifyingOrder:", chainId, order, signature);
+  const valid = verifyTypedData(wagmiConfig, {
+    domain: PROTOCOL_CONFIG[chainId].domain,
+    types: eip721Types,
+    message: order,
+    primaryType: "RentoutOrder",
+    address: order.maker,
+    signature: signature
+  })
+  return valid as any;
 }

@@ -10,7 +10,7 @@ import { gql, request } from "graphql-request";
 import {
   RENFT_GRAPHQL_URL,
   DEFAULT_NFT_IMG_URL,
-  config,
+  // config,
   PROTOCOL_CONFIG,
 } from "@/config";
 import { NFTInfo, RentoutOrderMsg } from "@/types";
@@ -50,7 +50,7 @@ export function useUserNFTs(): NFTBalanceResponse {
   const { data: result, error } = useSWR(
     isConnected
       ? {
-          query: gql`
+        query: gql`
             query userNFTs($wallet: Bytes!) {
               tokenInfos(where: { owner: $wallet }) {
                 id
@@ -63,10 +63,10 @@ export function useUserNFTs(): NFTBalanceResponse {
               }
             }
           `,
-          variables: {
-            wallet: address!.toLowerCase(),
-          },
-        }
+        variables: {
+          wallet: address!.toLowerCase(),
+        },
+      }
       : null,
     (req: GQL) =>
       request<queryResponse>(RENFT_GRAPHQL_URL!, req.query, req.variables)
@@ -179,12 +179,25 @@ export function useWriteApproveTx(nft: NFTInfo | null) {
     useWaitForTransactionReceipt({ hash });
   const mkt = useMarketContract();
 
+
   // 读合约：获取是否已经授权
   // https://wagmi.sh/react/api/hooks/useReadContract#type-inference
   // 或者检查是否有整个集合授权给MKT合约
-  var approveTo = undefined;
 
-  // TODO 查询NFT是否已经授权给市场合约
+  const result = useReadContract({
+    abi: ERC721ABI,
+    address: nft?.ca as Address,
+    functionName: "getApproved",
+    args: [`${nft?.tokenId}`],
+  });
+
+
+  var approveTo = undefined;
+  if (result) {
+    approveTo = result.data as Address;
+  }
+
+  console.log("approveTo:", approveTo);
 
   return {
     hash,
@@ -194,18 +207,28 @@ export function useWriteApproveTx(nft: NFTInfo | null) {
     isConfirmed,
     isApproved: approveTo === mkt?.address,
     sendTx: () => {
-      // TODO 写合约：调用NFT合约，将 NFT 授权给市场合约
+      console.log("sendTx:", mkt?.address);
+
       // https://wagmi.sh/react/guides/write-to-contract#_4-hook-up-the-usewritecontract-hook
+      writeContract({
+        address: nft?.ca as Address,
+        abi: ERC721ABI,
+        functionName: 'approve',
+        args: [mkt?.address, nft?.tokenId],
+      })
     },
   };
+
 }
 
 export function useMarketContract() {
   const { chainId } = useAccount();
+  // const chainId = 31337;
+  console.log(`chainId:${chainId}`);
   return chainId
     ? {
-        address: PROTOCOL_CONFIG[chainId].rentoutMarket,
-        abi: marketABI,
-      }
+      address: PROTOCOL_CONFIG[chainId].rentoutMarket as Address,
+      abi: marketABI,
+    }
     : undefined;
 }

@@ -4,7 +4,7 @@ import { ToastContainer } from "react-toastify";
 import "@/styles/globals.css";
 import "react-toastify/dist/ReactToastify.css";
 
-import { config } from "@/config";
+// import { config } from "@/config";
 import Web3ModalProvider from "@/components/Web3ModalProvider";
 
 // import { cookieToInitialState } from "wagmi";

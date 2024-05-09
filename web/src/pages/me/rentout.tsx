@@ -18,6 +18,7 @@ import { parseUnits } from "viem";
 export default function Rentout() {
   const nftResp = useUserNFTs();
   const { address: userWallet, chainId } = useAccount();
+  const { connector } = getAccount(config);
 
   const [selectedNft, setSelectedNft] = useState<NFTInfo | null>(null);
   const [step, setStep] = useState(1);
@@ -50,6 +51,7 @@ export default function Rentout() {
   const approveHelp = useWriteApproveTx(selectedNft);
 
   const handleApprove = async () => {
+    console.log("approveHelp:", approveHelp);
     await approveHelp.sendTx();
   };
 
@@ -85,7 +87,13 @@ export default function Rentout() {
       console.log("info:", chainId, PROTOCOL_CONFIG[chainId!].domain);
 
       // TODO 请求钱包签名，获得签名信息
-      const signature = "0x0000...0000";
+      const signature = await signTypedData(config, {
+        connector,
+        domain: PROTOCOL_CONFIG[chainId].domain,
+        types: eip721Types,
+        primaryType: "RentoutOrder",
+        message: order,
+      });
 
       console.log("signature", signature);
 

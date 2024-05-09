@@ -4,14 +4,16 @@ import _ from "lodash";
 import { LOADIG_IMG_URL, DEFAULT_NFT_IMG_URL, PROTOCOL_CONFIG } from "@/config";
 import { useEffect, useState } from "react";
 import { NFTInfo, RentoutOrderEntry, RentoutOrderMsg } from "@/types";
-import { useFetchNFTMetadata } from "@/lib/fetch";
-import { formatUnits } from "viem";
+import { useFetchNFTMetadata, useMarketContract } from "@/lib/fetch";
+import { formatUnits, parseUnits, parseEther } from "viem";
 import {
   type BaseError,
   useAccount,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
+import { Address } from "viem";
+import { ERC721ABI, marketABI } from "@/lib/abi";
 
 export default function OrderCard(props: { order: RentoutOrderEntry }) {
   const { chainId } = useAccount();
@@ -28,6 +30,7 @@ export default function OrderCard(props: { order: RentoutOrderEntry }) {
   const metaRes = useFetchNFTMetadata(nft);
   const [image, setImage] = useState(LOADIG_IMG_URL);
   const [hover, setHover] = useState(false);
+  const mkt = useMarketContract();
 
   useEffect(() => {
     setImage(
@@ -44,7 +47,29 @@ export default function OrderCard(props: { order: RentoutOrderEntry }) {
   const handleOpen = (e: React.FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    //TODO: 写合约，执行Borrow 交易
+    console.log("handleOpen:", order as RentoutOrderMsg);
+    console.log("handleOpen address:", mkt?.address);
+
+    const rentOrder: RentoutOrderMsg = {
+      maker: order.maker,
+      nft_ca: order.nft_ca,
+      token_id: order.token_id,
+      daily_rent: order.daily_rent,
+      max_rental_duration: order.max_rental_duration,
+      min_collateral: order.min_collateral,
+      list_endtime: order.list_endtime,
+    };
+
+    console.log("rent order", rentOrder);
+
+    writeContract({
+      address: mkt?.address as Address,
+      abi: marketABI,
+      functionName: "borrow",
+      value: parseEther(`${order.min_collateral} wei`),
+      args: [rentOrder, order.signature],
+    });
+    console.log(error);
   };
 
   return (

@@ -1,5 +1,5 @@
 import { NFTInfo, RentoutOrderMsg } from "@/types";
-import { sql } from "@vercel/postgres";
+import { sql, db } from "@vercel/postgres";
 import { NextApiRequest, NextApiResponse } from "next";
 
 const ADMIN_PWD = "openspace@s2";
@@ -21,7 +21,7 @@ export default async function handler(
     const result = await sql`CREATE TABLE IF NOT EXISTS rentout_orders (
         id SERIAL PRIMARY KEY,
         chain_id INTEGER NOT NULL,
-        taker TEXT,
+        maker TEXT,
         nft_ca TEXT,
         token_url TEXT,
         token_name TEXT,
@@ -48,15 +48,13 @@ export async function saveOrder(
 ) {
   // TODO: 验证提交的订单信息是否合法
   // 先删除已存在的记录
-  await sql`delete from rentout_orders where chain_id = ${chainId} and nft_ca = ${
-    order.nft_ca
-  } and token_id = ${order.token_id.toString()}`;
+  await sql`delete from rentout_orders where chain_id = ${chainId} and nft_ca = ${order.nft_ca
+    } and token_id = ${order.token_id.toString()}`;
 
   // 插入新记录
   return sql`insert into rentout_orders (chain_id, maker, nft_ca, token_id, max_rental_duration, daily_rent, min_collateral, list_endtime,token_url,token_name,signature) 
-   values (${chainId}, ${order.maker}, ${
-    order.nft_ca
-  }, ${order.token_id.toString()}, 
+   values (${chainId}, ${order.maker}, ${order.nft_ca
+    }, ${order.token_id.toString()}, 
     ${order.max_rental_duration.toString()}, 
     ${order.daily_rent.toString()}, 
     ${order.min_collateral.toString()},

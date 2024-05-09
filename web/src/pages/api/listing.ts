@@ -9,6 +9,7 @@ export default async function handler(
     try {
       const { chainId, wallet } = req.query;
       if (!chainId || typeof chainId !== "string") {
+        console.log("invalid chainId: ", chainId);
         return res.status(200).json({ error: "Invalid request" });
       } else {
         const { rows } =

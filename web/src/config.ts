@@ -1,7 +1,14 @@
+// import { defaultWagmiConfig } from "@web3modal/wagmi/react/config";
+
+// import { cookieStorage, createStorage } from "wagmi";
+// import { localhost, mainnet, sepolia, foundry } from "wagmi/chains";
+
 import { defaultWagmiConfig } from "@web3modal/wagmi/react/config";
 
 import { cookieStorage, createStorage } from "wagmi";
-import { localhost, mainnet, sepolia } from "wagmi/chains";
+import { localhost, mainnet, sepolia, foundry } from "wagmi/chains";
+// import { http, createConfig, WagmiProvider } from 'wagmi'
+
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString();
@@ -28,7 +35,7 @@ const metadata = {
 };
 
 // Create wagmiConfig
-const chains = [mainnet, sepolia] as const;
+const chains = [mainnet, sepolia, foundry] as const;
 export const config = defaultWagmiConfig({
   chains,
   projectId,
@@ -42,29 +49,54 @@ export const config = defaultWagmiConfig({
 
 import { http, createConfig } from "@wagmi/core";
 export const wagmiConfig = createConfig({
-  chains: [mainnet, sepolia],
+  chains: [mainnet, sepolia, foundry],
   transports: {
     [mainnet.id]: http("https://ethereum-rpc.publicnode.com"),
-    [sepolia.id]: http("https://ethereum-sepolia-rpc.publicnode.com"),
+    // [sepolia.id]: http("https://ethereum-sepolia-rpc.publicnode.com"),
+    [sepolia.id]: http("https://sepolia.gateway.tenderly.co"),
+
+    [foundry.id]: http("http://127.0.0.1:8545"),
   },
+
 });
 
 import { type TypedData } from "viem";
 
-// 协议配置
+// 协议配置 
 export const PROTOCOL_CONFIG = {
+  [Number(foundry.id)]: {
+    domain: {
+      name: 'RentMarket',
+      version: '1',
+      chainId: 31337,
+      verifyingContract: '0x5fbdb2315678afecb367f032d93f642f64180aa3',
+    },
+    rentoutMarket: "0x5FbDB2315678afecb367f032d93F642f64180aa3", // TODO: 配置出租市场合约地址
+  },
+
   [Number(sepolia.id)]: {
     domain: {
-      // TODO: 配置EIP-712签名域名信息
+      name: 'RentMarket',
+      version: '1',
+      chainId: sepolia.id,
+      verifyingContract: '0xCE15B0E02Fb1915Abd86B1A18B83B3416d65cb51',
     },
-    rentoutMarket: "0x000...000", // TODO: 配置出租市场合约地址
+    rentoutMarket: "0xCE15B0E02Fb1915Abd86B1A18B83B3416d65cb51", // TODO: 配置出租市场合约地址
   },
 } as const;
+
+
 
 // EIP-721 签名类型
 export const eip721Types = {
   // 出租NFT的挂单信息结构
   RentoutOrder: [
-    // TODO: 定义出租订单结构数据
+    { name: 'maker', type: 'address' },
+    { name: 'nft_ca', type: 'address' },
+    { name: 'token_id', type: 'uint256' },
+    { name: 'daily_rent', type: 'uint256' },
+    { name: 'max_rental_duration', type: 'uint256' },
+    { name: 'min_collateral', type: 'uint256' },
+    { name: 'list_endtime', type: 'uint256' },
   ],
 } as const as TypedData;
