@@ -66,7 +66,7 @@ export default function OrderCard(props: { order: RentoutOrderEntry }) {
       address: mkt?.address as Address,
       abi: marketABI,
       functionName: "borrow",
-      value: parseEther(`${order.min_collateral} wei`),
+      value: order.min_collateral,
       args: [rentOrder, order.signature],
     });
     console.log(error);
